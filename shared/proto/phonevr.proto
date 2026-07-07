@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package phonevr;
+
+enum TrackingQuality {
+    TRACKING_QUALITY_LOW = 0;
+    TRACKING_QUALITY_MEDIUM = 1;
+    TRACKING_QUALITY_HIGH = 2;
+}
+
+message Vector3 {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message Quaternion {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+    float w = 4;
+}
+
+message Pose {
+    Vector3 position = 1;
+    Quaternion orientation = 2;
+    uint64 timestamp_us = 3;
+}
+
+message ImuData {
+    Vector3 accelerometer = 1;
+    Vector3 gyroscope = 2;
+    Vector3 magnetometer = 3;
+    uint64 timestamp_us = 4;
+}
+
+message HandLandmark {
+    Vector3 position = 1;
+    float confidence = 2;
+    uint32 joint_type = 3;
+}
+
+message HandData {
+    uint32 hand_id = 1;
+    repeated HandLandmark landmarks = 2;
+    float hand_radius = 3;
+    Vector3 wrist_position = 4;
+    Quaternion wrist_rotation = 5;
+    HandGesture gesture = 6;
+    uint64 timestamp_us = 7;
+}
+
+enum HandGesture {
+    HAND_GESTURE_UNKNOWN = 0;
+    HAND_GESTURE_PINCH = 1;
+    HAND_GESTURE_GRAB = 2;
+    HAND_GESTURE_POINT = 3;
+    HAND_GESTURE_THUMB_UP = 4;
+    HAND_GESTURE_OPEN_HAND = 5;
+    HAND_GESTURE_FIST = 6;
+}
+
+message TrackingFrame {
+    Pose head_pose = 1;
+    ImuData raw_imu = 2;
+    HandData left_hand = 3;
+    HandData right_hand = 4;
+    uint32 frame_sequence = 5;
+    TrackingQuality quality = 6;
+}
+
+message VideoFrameHeader {
+    uint32 width = 1;
+    uint32 height = 2;
+    uint64 pts_us = 3;
+    uint32 frame_sequence = 4;
+    VideoCodec codec = 5;
+    VideoEye eye = 6;
+    uint32 nal_count = 7;
+    bytes sps_pps = 8;
+    uint32 frame_size = 9;
+}
+
+enum VideoCodec {
+    VIDEO_CODEC_H264 = 0;
+    VIDEO_CODEC_H265 = 1;
+}
+
+enum VideoEye {
+    VIDEO_EYE_LEFT = 0;
+    VIDEO_EYE_RIGHT = 1;
+    VIDEO_EYE_BOTH = 2;
+}
+
+message VideoPacket {
+    VideoFrameHeader header = 1;
+    bytes nal_data = 2;
+    uint32 packet_sequence = 3;
+    uint32 total_packets = 4;
+    bool is_keyframe = 5;
+}
+
+message ControlMessage {
+    ControlMessageType type = 1;
+    bytes payload = 2;
+    uint64 timestamp_us = 3;
+    uint32 message_id = 4;
+}
+
+enum ControlMessageType {
+    CONTROL_HEARTBEAT = 0;
+    CONTROL_RECENTER = 1;
+    CONTROL_CALIBRATE = 2;
+    CONTROL_SET_BITRATE = 3;
+    CONTROL_SET_RESOLUTION = 4;
+    CONTROL_SET_FPS = 5;
+    CONTROL_SET_IPD = 6;
+    CONTROL_REQUEST_KEYFRAME = 7;
+    CONTROL_DISCONNECT = 8;
+    CONTROL_STATS_REPORT = 9;
+    CONTROL_DEVICE_INFO = 10;
+}
+
+message StatsReport {
+    uint64 round_trip_time_us = 1;
+    uint32 packets_lost = 2;
+    uint32 packets_sent = 3;
+    float bitrate_mbps = 4;
+    float encode_time_ms = 5;
+    float decode_latency_ms = 6;
+    float render_latency_ms = 7;
+    float motion_to_photon_latency_ms = 8;
+    uint32 frame_rate = 9;
+    uint32 battery_level = 10;
+}
+
+message DeviceInfo {
+    string device_name = 1;
+    string os_version = 2;
+    string app_version = 3;
+    float display_refresh_rate = 4;
+    uint32 display_width = 5;
+    uint32 display_height = 6;
+    float display_dpi = 7;
+    bool supports_hevc = 8;
+    uint32 max_bitrate = 9;
+    uint32 min_bitrate = 10;
+    float ipd = 11;
+}

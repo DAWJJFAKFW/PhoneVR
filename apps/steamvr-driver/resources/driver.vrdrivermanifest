@@ -1,0 +1,13 @@
+{
+    "name": "PhoneVR",
+    "type": "driver",
+    "version": "1.0.0",
+    "description": "PhoneVR driver for iPhone VR headsets",
+    "vendor": "PhoneVR",
+    "license": "MIT",
+    "url": "https://github.com/phonevr/phonevr",
+    "required_hmd": [],
+    "interface_versions": {
+        "IVRDriver": "002"
+    }
+}

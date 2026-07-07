@@ -1,0 +1,53 @@
+name: PhoneVR
+options:
+  bundleIdPrefix: com.phonevr
+  deploymentTarget:
+    iOS: "18.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    INFOPLIST_FILE: PhoneVR/Info.plist
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: ""
+    PROVISIONING_PROFILE_SPECIFIER: ""
+
+targets:
+  PhoneVR:
+    type: application
+    platform: iOS
+    sources:
+      - path: PhoneVR/PhoneVR/Sources
+      - path: PhoneVR/PhoneVR/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.phonevr.ios
+        INFOPLIST_FILE: PhoneVR/Info.plist
+        IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    info:
+      path: PhoneVR/Info.plist
+      properties:
+        UIRequiredDeviceCapabilities: [arm64, metal, opengles-2]
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeRight
+          - UIInterfaceOrientationLandscapeLeft
+        NSCameraUsageDescription: "PhoneVR uses the camera for hand tracking"
+        NSLocalNetworkUsageDescription: "PhoneVR needs local network access to stream VR data to your PC"
+        NSBonjourServices:
+          - "_phonevr._tcp"
+        UIPreferredContentSizeCategory: accessibilityMedium
+        UIApplicationSupportsIndirectInputEvents: true
+        UIDeviceFamily: [1, 2]
+    preBuildScripts:
+      - name: "Generate Metal Shaders"
+        script: |
+          # Metal shaders are compiled at build time by Xcode
+          echo "Metal shaders will be compiled by Xcode"
+    dependencies: []

@@ -1,0 +1,157 @@
+name: PhoneVR CI
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ios-build:
+    name: Build iOS Client
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer 2>/dev/null || true
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen 2>/dev/null || true
+
+      - name: Generate Xcode Project
+        run: |
+          cd apps/ios-client
+          xcodegen generate
+
+      - name: Build iOS App
+        run: |
+          cd apps/ios-client
+          xcodebuild \
+            -project PhoneVR.xcodeproj \
+            -scheme PhoneVR \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            clean build
+
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhoneVR-iOS
+          path: |
+            apps/ios-client/build/Release-iphoneos/*.app
+            apps/ios-client/build/Release-iphoneos/*.ipa
+          if-no-files-found: warn
+
+  windows-build:
+    name: Build Windows Host + Driver + Launcher
+    runs-on: windows-2022
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Dependencies
+        run: |
+          # Install vcpkg dependencies
+          vcpkg install nlohmann-json:x64-windows
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+
+      - name: Configure CMake
+        run: |
+          cmake -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DSUPPORT_OPENXR=OFF `
+            -DSUPPORT_STEAMVR=OFF
+
+      - name: Build Windows Host
+        run: |
+          cmake --build build --config Release --target PhoneVRHost
+
+      - name: Build SteamVR Driver
+        run: |
+          cmake --build build --config Release --target phonevr_driver
+
+      - name: Build Launcher
+        run: |
+          cmake --build build --config Release --target PhoneVRLauncher
+
+      - name: Build Tests
+        run: |
+          cmake --build build --config Release --target shared_test
+          cmake --build build --config Release --target windows_test
+          cmake --build build --config Release --target steamvr_test
+
+      - name: Run Tests
+        run: |
+          cd build
+          ctest --output-on-failure -C Release
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhoneVR-Windows
+          path: |
+            build/apps/windows-host/Release/PhoneVRHost.exe
+            build/apps/steamvr-driver/Release/phonevr_driver.dll
+            build/apps/launcher/Release/PhoneVRLauncher.exe
+            build/tests/Release/shared_test.exe
+            build/tests/Release/windows_test.exe
+            build/tests/Release/steamvr_test.exe
+          if-no-files-found: warn
+
+  release:
+    name: Create Release
+    needs: [ios-build, windows-build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download iOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PhoneVR-iOS
+          path: artifacts/ios
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PhoneVR-Windows
+          path: artifacts/windows
+
+      - name: Package Release
+        run: |
+          cd artifacts
+          zip -r ../PhoneVR-iOS-${{ github.ref_name }}.zip ios/
+          zip -r ../PhoneVR-Windows-${{ github.ref_name }}.zip windows/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            PhoneVR-iOS-${{ github.ref_name }}.zip
+            PhoneVR-Windows-${{ github.ref_name }}.zip
+            README.md
+            BUILDING.md
+          generate_release_notes: true

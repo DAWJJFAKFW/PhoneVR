@@ -1,0 +1,54 @@
+# Xcode
+*.xcworkspace
+*.xcuserdata
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Visual Studio
+*.sln
+*.vcxproj.user
+*.vcxproj.filters
+*.suo
+*.user
+.vs/
+Build/
+x64/
+Win32/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeUserPresets.json
+
+# Build outputs
+bin/
+obj/
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+*.exp
+
+# Swift Package Manager
+.build/
+Packages/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
