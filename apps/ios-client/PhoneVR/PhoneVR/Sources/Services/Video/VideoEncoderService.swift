@@ -11,8 +11,9 @@ public class VideoEncoderService {
     public var onEncodedFrame: ((Data, VRVideoFrameHeader) -> Void)?
     public private(set) var isEncoding = false
 
-    private var frameSequence: UInt32 = 0
+    fileprivate var frameSequence: UInt32 = 0
     fileprivate var lastSPSPPS: Data?
+    fileprivate var forceKeyframe: Bool = false
 
     public var targetBitrate: UInt32 = 100_000_000
     public var targetFPS: UInt32 = 90
@@ -96,8 +97,11 @@ public class VideoEncoderService {
 
         let duration = CMTime(value: 1, timescale: CMTimeScale(targetFPS))
 
+        let isForced = forceKeyframe
+        forceKeyframe = false
+        let shouldForce = frameSeq % 90 == 0 || isForced
         let frameProperties: NSDictionary = [
-            kVTEncodeFrameOptionKey_ForceKeyFrame: (frameSeq % 90 == 0) as NSNumber
+            kVTEncodeFrameOptionKey_ForceKeyFrame: shouldForce as NSNumber
         ]
 
         VTCompressionSessionEncodeFrame(
@@ -112,9 +116,8 @@ public class VideoEncoderService {
     }
 
     public func requestKeyframe() {
-        guard let session = compressionSession else { return }
-        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ForceKeyFrame,
-                            value: kCFBooleanTrue)
+        guard isEncoding else { return }
+        forceKeyframe = true
     }
 
     public func updateBitrate(_ bitrate: UInt32) {
