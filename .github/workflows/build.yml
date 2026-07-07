@@ -77,9 +77,13 @@ jobs:
         run: |
           cmake --build build --config Release --target PhoneVRHost
 
-      - name: Build SteamVR Driver
+      - name: Build SteamVR Driver (if OpenVR found)
         run: |
-          cmake --build build --config Release --target phonevr_driver
+          if (Test-Path "build/apps/steamvr-driver/phonevr_driver.vcxproj") {
+            cmake --build build --config Release --target phonevr_driver
+          } else {
+            echo "SteamVR driver skipped (OpenVR not found)"
+          }
 
       - name: Build Launcher
         run: |
