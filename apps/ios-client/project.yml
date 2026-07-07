@@ -4,11 +4,10 @@ options:
   deploymentTarget:
     iOS: "18.0"
   xcodeVersion: "16.0"
-  generateEmptyDirectories: true
 
 settings:
   base:
-    SWIFT_VERSION: "6.0"
+    SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1,2"
     INFOPLIST_FILE: PhoneVR/Info.plist
     DEVELOPMENT_TEAM: ""
@@ -22,7 +21,8 @@ targets:
     platform: iOS
     sources:
       - path: PhoneVR/PhoneVR/Sources
-      - path: PhoneVR/PhoneVR/Resources
+      - path: PhoneVR/Info.plist
+      - path: PhoneVR/LaunchScreen.storyboard
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.phonevr.ios
@@ -32,7 +32,7 @@ targets:
     info:
       path: PhoneVR/Info.plist
       properties:
-        UIRequiredDeviceCapabilities: [arm64, metal, opengles-2]
+        UIRequiredDeviceCapabilities: [arm64, metal]
         UIStatusBarHidden: true
         UIViewControllerBasedStatusBarAppearance: false
         UISupportedInterfaceOrientations:
@@ -42,12 +42,6 @@ targets:
         NSLocalNetworkUsageDescription: "PhoneVR needs local network access to stream VR data to your PC"
         NSBonjourServices:
           - "_phonevr._tcp"
-        UIPreferredContentSizeCategory: accessibilityMedium
         UIApplicationSupportsIndirectInputEvents: true
         UIDeviceFamily: [1, 2]
-    preBuildScripts:
-      - name: "Generate Metal Shaders"
-        script: |
-          # Metal shaders are compiled at build time by Xcode
-          echo "Metal shaders will be compiled by Xcode"
-    dependencies: []
+        UILaunchStoryboardName: LaunchScreen

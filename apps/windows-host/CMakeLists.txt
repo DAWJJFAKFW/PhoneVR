@@ -20,11 +20,10 @@ add_executable(PhoneVRHost
 
 target_include_directories(PhoneVRHost PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../shared/cpp
 )
 
-# Windows SDK
 target_link_libraries(PhoneVRHost PRIVATE
+    phonevr_shared
     ws2_32
     mfplat
     mfuuid

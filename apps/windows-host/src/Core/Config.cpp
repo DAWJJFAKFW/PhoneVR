@@ -1,61 +1,79 @@
 #include "Config.h"
 #include <fstream>
+#include <sstream>
 #include <filesystem>
-#include <nlohmann/json.hpp>
+#include <windows.h>
 
 namespace phonevr {
 
-using json = nlohmann::json;
-
 HostConfig HostConfig::load() {
     HostConfig config;
-    std::string path = std::filesystem::current_path().string() + "/phonevr_config.json";
+    std::string path = std::filesystem::current_path().string() + "\\phonevr_config.ini";
 
-    std::ifstream file(path);
-    if (!file.is_open()) return config;
+    wchar_t wpath[512];
+    MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, wpath, 512);
 
-    try {
-        json j;
-        file >> j;
+    wchar_t buf[256];
+    int result;
 
-        config.listen_address = j.value("listen_address", config.listen_address);
-        config.control_port = j.value("control_port", config.control_port);
-        config.video_port = j.value("video_port", config.video_port);
-        config.render_width = j.value("render_width", config.render_width);
-        config.render_height = j.value("render_height", config.render_height);
-        config.render_scale = j.value("render_scale", config.render_scale);
-        config.target_fps = j.value("target_fps", config.target_fps);
-        config.target_bitrate = j.value("target_bitrate", config.target_bitrate);
-        config.enable_hand_tracking = j.value("enable_hand_tracking", config.enable_hand_tracking);
-        config.enable_foveated = j.value("enable_foveated", config.enable_foveated);
-        config.prefer_openxr = j.value("prefer_openxr", config.prefer_openxr);
-        config.log_level = j.value("log_level", config.log_level);
-    } catch (...) {}
+    result = GetPrivateProfileStringW(L"PhoneVR", L"listen_address", L"0.0.0.0",
+                                       buf, 256, wpath);
+    if (result > 0) {
+        char addr[64];
+        WideCharToMultiByte(CP_UTF8, 0, buf, -1, addr, 64, nullptr, nullptr);
+        config.listen_address = addr;
+    }
+
+    config.control_port = GetPrivateProfileIntW(L"PhoneVR", L"control_port",
+                                                  config.control_port, wpath);
+    config.video_port = GetPrivateProfileIntW(L"PhoneVR", L"video_port",
+                                                config.video_port, wpath);
+    config.render_width = GetPrivateProfileIntW(L"PhoneVR", L"render_width",
+                                                  config.render_width, wpath);
+    config.render_height = GetPrivateProfileIntW(L"PhoneVR", L"render_height",
+                                                   config.render_height, wpath);
+    config.target_fps = GetPrivateProfileIntW(L"PhoneVR", L"target_fps",
+                                                config.target_fps, wpath);
+    config.target_bitrate = GetPrivateProfileIntW(L"PhoneVR", L"target_bitrate",
+                                                    config.target_bitrate, wpath);
+
+    wchar_t log_buf[32];
+    result = GetPrivateProfileStringW(L"PhoneVR", L"log_level", L"info",
+                                       log_buf, 32, wpath);
+    if (result > 0) {
+        char level[32];
+        WideCharToMultiByte(CP_UTF8, 0, log_buf, -1, level, 32, nullptr, nullptr);
+        config.log_level = level;
+    }
 
     return config;
 }
 
 void HostConfig::save() const {
-    std::string path = std::filesystem::current_path().string() + "/phonevr_config.json";
+    std::string path = std::filesystem::current_path().string() + "\\phonevr_config.ini";
 
-    json j;
-    j["listen_address"] = listen_address;
-    j["control_port"] = control_port;
-    j["video_port"] = video_port;
-    j["render_width"] = render_width;
-    j["render_height"] = render_height;
-    j["render_scale"] = render_scale;
-    j["target_fps"] = target_fps;
-    j["target_bitrate"] = target_bitrate;
-    j["enable_hand_tracking"] = enable_hand_tracking;
-    j["enable_foveated"] = enable_foveated;
-    j["prefer_openxr"] = prefer_openxr;
-    j["log_level"] = log_level;
+    wchar_t wpath[512];
+    MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, wpath, 512);
 
-    std::ofstream file(path);
-    if (file.is_open()) {
-        file << j.dump(4);
-    }
+    wchar_t buf[64];
+
+    swprintf(buf, 64, L"%d", control_port);
+    WritePrivateProfileStringW(L"PhoneVR", L"control_port", buf, wpath);
+
+    swprintf(buf, 64, L"%d", video_port);
+    WritePrivateProfileStringW(L"PhoneVR", L"video_port", buf, wpath);
+
+    swprintf(buf, 64, L"%d", render_width);
+    WritePrivateProfileStringW(L"PhoneVR", L"render_width", buf, wpath);
+
+    swprintf(buf, 64, L"%d", render_height);
+    WritePrivateProfileStringW(L"PhoneVR", L"render_height", buf, wpath);
+
+    swprintf(buf, 64, L"%d", target_fps);
+    WritePrivateProfileStringW(L"PhoneVR", L"target_fps", buf, wpath);
+
+    swprintf(buf, 64, L"%d", target_bitrate);
+    WritePrivateProfileStringW(L"PhoneVR", L"target_bitrate", buf, wpath);
 }
 
 } // namespace phonevr

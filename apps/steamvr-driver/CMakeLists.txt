@@ -15,11 +15,11 @@ add_library(phonevr_driver SHARED
 
 target_include_directories(phonevr_driver PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../shared/cpp
     ${OPENVR_INCLUDE_DIR}
 )
 
 target_link_libraries(phonevr_driver PRIVATE
+    phonevr_shared
     openvr_api
 )
 

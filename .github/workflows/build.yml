@@ -68,19 +68,10 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Dependencies
-        run: |
-          # Install vcpkg dependencies
-          vcpkg install nlohmann-json:x64-windows
-          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
-
       - name: Configure CMake
         run: |
           cmake -B build `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DSUPPORT_OPENXR=OFF `
-            -DSUPPORT_STEAMVR=OFF
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Windows Host
         run: |
