@@ -12,7 +12,7 @@ public class VideoEncoderService {
     public private(set) var isEncoding = false
 
     private var frameSequence: UInt32 = 0
-    private var lastSPSPPS: Data?
+    fileprivate var lastSPSPPS: Data?
 
     public var targetBitrate: UInt32 = 100_000_000
     public var targetFPS: UInt32 = 90
@@ -23,11 +23,20 @@ public class VideoEncoderService {
 
         let codec: CMVideoCodecType = codecType == .h265 ? kCMVideoCodecType_HEVC : kCMVideoCodecType_H264
 
-        let encoderSpecification: NSDictionary = [
-            kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder: true,
-            kVTVideoEncoderSpecification_EncoderID: codecType == .h265
-                ? "com.apple.videotoolbox.videoencoder.hevc" : "com.apple.videotoolbox.videoencoder.h264"
-        ]
+        let encoderSpecification: NSDictionary = {
+            if #available(iOS 17.4, *) {
+                return [
+                    kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder: true,
+                    kVTVideoEncoderSpecification_EncoderID: codecType == .h265
+                        ? "com.apple.videotoolbox.videoencoder.hevc" : "com.apple.videotoolbox.videoencoder.h264"
+                ]
+            } else {
+                return [
+                    kVTVideoEncoderSpecification_EncoderID: codecType == .h265
+                        ? "com.apple.videotoolbox.videoencoder.hevc" : "com.apple.videotoolbox.videoencoder.h264"
+                ]
+            }
+        }()
 
         var session: VTCompressionSession?
         let status = VTCompressionSessionCreate(
@@ -85,7 +94,6 @@ public class VideoEncoderService {
         let frameSeq = frameSequence
         frameSequence += 1
 
-        let timestamp = CMTimeGetSeconds(pts) * 1_000_000
         let duration = CMTime(value: 1, timescale: CMTimeScale(targetFPS))
 
         let frameProperties: NSDictionary = [
@@ -105,15 +113,8 @@ public class VideoEncoderService {
 
     public func requestKeyframe() {
         guard let session = compressionSession else { return }
-        VTCompressionSessionEncodeFrame(
-            session,
-            imageBuffer: nil,
-            presentationTimeStamp: CMTime.zero,
-            duration: CMTime.invalid,
-            frameProperties: [kVTEncodeFrameOptionKey_ForceKeyFrame: true] as CFDictionary,
-            sourceFrameRefcon: nil,
-            infoFlagsOut: nil
-        )
+        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ForceKeyFrame,
+                            value: kCFBooleanTrue)
     }
 
     public func updateBitrate(_ bitrate: UInt32) {

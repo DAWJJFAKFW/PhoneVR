@@ -56,6 +56,8 @@ public class HandTrackingService: NSObject {
                 leftHand = handData
             case .right:
                 rightHand = handData
+            case .unknown:
+                break
             @unknown default:
                 break
             }
@@ -79,7 +81,7 @@ public class HandTrackingService: NSObject {
             switch jointType {
             case .wrist: visionJoint = .wrist
             case .thumbCMC: visionJoint = .thumbCMC
-            case .thumbMCP: visionJoint = .thumbMCP
+            case .thumbMCP: visionJoint = .thumbMP
             case .thumbIP: visionJoint = .thumbIP
             case .thumbTip: visionJoint = .thumbTip
             case .indexMCP: visionJoint = .indexMCP
@@ -105,7 +107,7 @@ public class HandTrackingService: NSObject {
                     position: VRVector3(
                         x: Float(point.location.x),
                         y: Float(point.location.y),
-                        z: Float(point.location.z)
+                        z: 0
                     ),
                     confidence: Float(point.confidence),
                     jointType: jointType
@@ -131,7 +133,7 @@ public class HandTrackingService: NSObject {
         let tips: [VRHandLandmark.HandJointType] = [.thumbTip, .indexTip, .middleTip, .ringTip, .littleTip]
         let tipPositions = tips.compactMap { tip in landmarks.first(where: { $0.jointType == tip })?.position }
         let mcpPositions: [VRHandLandmark.HandJointType] = [.indexMCP, .middleMCP, .ringMCP, .littleMCP]
-        let mcpPos = mcpPositions.compactMap { mcp in landmarks.first(where: { $0.jointType == mcp })?.position }
+        _ = mcpPositions.compactMap { mcp in landmarks.first(where: { $0.jointType == mcp })?.position }
 
         guard tipPositions.count >= 3, let indexTip = landmarks.first(where: { $0.jointType == .indexTip })?.position,
               let thumbTip = landmarks.first(where: { $0.jointType == .thumbTip })?.position,

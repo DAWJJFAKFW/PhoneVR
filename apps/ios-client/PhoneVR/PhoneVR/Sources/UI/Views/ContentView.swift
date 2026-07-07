@@ -1,4 +1,5 @@
 import SwiftUI
+import MetalKit
 
 struct ContentView: View {
     @EnvironmentObject var appState: VRAppState

@@ -32,17 +32,27 @@ public struct VRPacketHeader {
     }
 
     public static func decode(from data: Data) -> VRPacketHeader? {
-        guard data.count >= 24 else { return nil }
-        let magic = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).bigEndian }
+        let size = MemoryLayout<UInt32>.size + MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + MemoryLayout<UInt16>.size + MemoryLayout<UInt32>.size + MemoryLayout<UInt32>.size
+        guard data.count >= size else { return nil }
+        let magic = data.withUnsafeBytes { ptr in
+            ptr.load(as: UInt32.self).bigEndian
+        }
         guard magic == 0x50485256 else { return nil }
-        let sequence = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self, offsetBy: 4).bigEndian }
-        let type = data.withUnsafeBytes { $0.loadUnaligned(as: UInt16.self, offsetBy: 8).bigEndian }
-        let flags = data.withUnsafeBytes { $0.loadUnaligned(as: UInt16.self, offsetBy: 10).bigEndian }
-        let payloadSize = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self, offsetBy: 12).bigEndian }
-        let crc32 = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self, offsetBy: 20).bigEndian } // offset fixed: 12+4=16? Let me recalculate
-        // Header layout: magic(4) + sequence(4) + type(2) + flags(2) + payloadSize(4) + crc32(4) = 20 bytes? No...
-        // Actually: magic 4, sequence 4 (offset 4), type 2 (offset 8), flags 2 (offset 10), payloadSize 4 (offset 12), crc32 4 (offset 16)
-        // That's 20 bytes total, not 24.
+        let sequence = data.withUnsafeBytes { ptr in
+            ptr.load(fromByteOffset: 4, as: UInt32.self).bigEndian
+        }
+        let type = data.withUnsafeBytes { ptr in
+            ptr.load(fromByteOffset: 8, as: UInt16.self).bigEndian
+        }
+        let flags = data.withUnsafeBytes { ptr in
+            ptr.load(fromByteOffset: 10, as: UInt16.self).bigEndian
+        }
+        let payloadSize = data.withUnsafeBytes { ptr in
+            ptr.load(fromByteOffset: 12, as: UInt32.self).bigEndian
+        }
+        let crc32 = data.withUnsafeBytes { ptr in
+            ptr.load(fromByteOffset: 16, as: UInt32.self).bigEndian
+        }
         return VRPacketHeader(sequence: sequence, type: type, flags: flags, payloadSize: payloadSize, crc32: crc32)
     }
 

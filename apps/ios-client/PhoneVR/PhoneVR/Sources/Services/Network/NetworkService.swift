@@ -39,7 +39,7 @@ public class NetworkService {
         tcpOptions.keepaliveInterval = 2
         tcpOptions.keepaliveCount = 3
 
-        let params = NWParameters(tls: nil, tcp: tcpOptions)
+        let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!)
 
         if !useTCP {
             let udpParams = NWParameters.udp
@@ -68,7 +68,7 @@ public class NetworkService {
             return
         }
 
-        let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!)
+        let params = NWParameters(tls: nil, tcp: tcpOptions)
         connection = NWConnection(to: endpoint, using: params)
 
         connection?.stateUpdateHandler = { [weak self] state in

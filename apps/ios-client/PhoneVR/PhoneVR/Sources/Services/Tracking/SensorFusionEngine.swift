@@ -107,9 +107,9 @@ public class SensorFusionEngine {
 
         currentPose = VRPose(
             position: VRVector3(
-                x: motion.userAcceleration.x * 9.81,
-                y: motion.userAcceleration.y * 9.81,
-                z: motion.userAcceleration.z * 9.81
+                x: Float(motion.userAcceleration.x * 9.81),
+                y: Float(motion.userAcceleration.y * 9.81),
+                z: Float(motion.userAcceleration.z * 9.81)
             ),
             orientation: VRQuaternion(
                 x: finalQuat.imag.x,
