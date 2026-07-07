@@ -21,6 +21,7 @@ targets:
     platform: iOS
     sources:
       - path: PhoneVR/PhoneVR/Sources
+      - path: ../../shared/swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.phonevr.ios
@@ -41,4 +42,3 @@ targets:
         NSBonjourServices:
           - "_phonevr._tcp"
         UIApplicationSupportsIndirectInputEvents: true
-        UIDeviceFamily: [1, 2]

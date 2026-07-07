@@ -42,8 +42,30 @@ public class NetworkService {
         let params = NWParameters(tls: nil, tcp: tcpOptions)
 
         if !useTCP {
-            let udpOptions = NWProtocolUDP.Options()
-            params.defaultProtocolStack.applicationProtocols.insert(NWProtocolUDP.definition, at: 0)
+            let udpParams = NWParameters.udp
+            connection = NWConnection(to: endpoint, using: udpParams)
+            connection?.stateUpdateHandler = { [weak self] state in
+                DispatchQueue.main.async {
+                    switch state {
+                    case .ready:
+                        self?.isConnected = true
+                        self?.onConnectionStateChange?(.connected)
+                        self?.startHeartbeat()
+                        self?.receiveLoop()
+                    case .failed(let error):
+                        self?.isConnected = false
+                        self?.onConnectionStateChange?(.failed(error))
+                    case .cancelled:
+                        self?.isConnected = false
+                        self?.onConnectionStateChange?(.disconnected)
+                    default:
+                        break
+                    }
+                }
+            }
+            connection?.start(queue: queue)
+            onConnectionStateChange?(.connecting)
+            return
         }
 
         let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!)
